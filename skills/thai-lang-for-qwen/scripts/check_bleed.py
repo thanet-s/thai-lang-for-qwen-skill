@@ -17,6 +17,16 @@ import argparse
 import sys
 import unicodedata
 
+# Windows consoles may use a legacy codepage (e.g. cp874 on Thai locales),
+# and -I (isolated) mode ignores PYTHONUTF8/PYTHONIOENCODING, so force UTF-8
+# on the streams we touch: otherwise piped stdin is mis-decoded as cp874 and
+# CJK bytes become surrogates that silently slip past the scan.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+    # errors="replace" keeps undecodable bytes visible: U+FFFD falls in the
+    # flagged full-width range, so a bad decode reports instead of passing.
+    sys.stdin.reconfigure(encoding="utf-8", errors="replace")
+
 # Ranges that should never appear in pure Thai prose.
 RANGES = [
     (0x3000, 0x303F, "CJK punctuation"),
