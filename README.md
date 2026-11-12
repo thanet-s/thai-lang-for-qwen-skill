@@ -49,7 +49,7 @@ thai-lang-for-qwen-skill/
 ├── README.md
 └── skills/
     └── thai-lang-for-qwen/
-        ├── SKILL.md                 ← ตัว skill (frontmatter + instructions)
+        └── SKILL.md                 ← ตัว skill (frontmatter + instructions) — self-contained
 ```
 
 ## Credits
