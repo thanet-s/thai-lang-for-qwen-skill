@@ -2,18 +2,18 @@
 
 > กันอาการ **language bleed** — อักษรจีน/kana/Hangul และเครื่องหมาย full-width หลุดมาในข้อความภาษาไทยของ AI agent (model ตระกูล Qwen และ model ที่ train มากับข้อมูลภาษาจีนปริมาณมาก)
 
-เช่น `或` หลุดมาแทน `หรือ`, หรือพิมพ์ `，：（）` แบบ full-width กลางประโยคไทย — เป็น artifact ของ model ไม่ใช่ตั้งใจ และ agent มักมองข้ามเอง skill นี้จึงสั่งให้ตรวจก่อนส่ง พร้อม linter สำหรับ file ยาว
+เช่น `或` หลุดมาแทน `หรือ`, หรือพิมพ์ `，：（）` แบบ full-width กลางประโยคไทย — เป็น artifact ของ model ไม่ใช่ตั้งใจ และ agent มักมองข้ามเอง skill นี้จึงสั่งให้ตรวจก่อนส่ง ด้วย checklist ที่ agent ทำเองได้ในข้อความเดียว (ไม่ต้องติดตั้งอะไรเพิ่ม)
 
 ## Features
 
 - **Self-check เมื่อ agent เขียนภาษาไทย** — SKILL.md สอนตารางคู่หลุดบ่อย (`或→หรือ`, `的→ของ/ที่`, `，→,` ฯลฯ) ให้ agent ตรวจคำตอบก่อนส่ง
-- **Linter script** (`scripts/check_bleed.py`) — ตรวจ file/deliverable ภาษาไทยแบบ deterministic: scan Unicode ต้องสงสัย (CJK U+4E00–U+9FFF, kana, Hangul, full-width U+FF00–U+FFEF) รายงาน `file:line:col` + codepoint + คำแนะนำแก้, exit 1 เมื่อพบ
-- **ไม่ลบมั่ว** — script รายงานอย่างเดียว agent เป็นผู้ตัดสิน และรองรับ `--allow` สำหรับอักษรจีนที่ตั้งใจใช้ (คำแปล, ชื่อเฉพาะ, quoted source)
+- **ตรวจข้อความยาว/ไฟล์ด้วย checklist เดียวกัน** — ไล่ scan Unicode ต้องสงสัย (CJK U+4E00–U+9FFF, kana, Hangul, full-width U+FF00–U+FFEF) + Thai↔ASCII กาว + คำไทยที่สะกดผิดบ่อย (`ที่`, `ด้วย`, `ไม่`)
+- **ไม่ลบมั่ว** — skill สอน agent ให้แยกของที่ตั้งใจใช้ (ศัพท์อังกฤษ, hex, ชื่อเฉพาะจีนใน code span) ออกจาก bleed จริง
 - **Style guide แนบใน skill** — คำทับศัพท์/ศัพท์เทคนิคให้เขียนเป็นอังกฤษ (linter, script, file, font...) ไม่ทับศัพท์เป็นไทย
 
 ## Install
 
-ต้องให้มี Node.js ≥ 22.20 ในเครื่อง (สำหรับ npx) — ตัว script ใช้แค่ python3 ไม่มี dependency
+ต้องให้มี Node.js ≥ 22.20 ในเครื่อง (เฉพาะสำหรับตัวติดตั้ง npx) — ตัว skill เป็นไฟล์ markdown ไฟล์เดียว ไม่มี dependency
 
 ```bash
 # ติดตั้งจาก repo นี้ (รันในโฟลเดอร์ project ของคุณ)
@@ -42,14 +42,6 @@ cp -r thai-lang-for-qwen-skill/skills/thai-lang-for-qwen ~/.zcode/skills/   # ZC
 
 - **อัตโนมัติ** — agent จะเรียกใช้ skill เองเมื่อเขียนข้อความภาษาไทยเนื้อหายาว หรือเมื่อคุณบ่นว่า "ไทยปนจีน" "ตัวจีนโผล่" (trigger จาก `description` ใน frontmatter)
 - **บังคับเรียก** — พิมพ์ `/thai-lang-for-qwen` แล้วตามด้วยงาน เช่น `/thai-lang-for-qwen ช่วยร่างประกาศเป็นภาษาไทยทางการ`
-- **รัน linter เอง** —
-
-```bash
-python3 -I skills/thai-lang-for-qwen/scripts/check_bleed.py draft.md
-python3 -I skills/thai-lang-for-qwen/scripts/check_bleed.py --text "ทดสอบ 或 แล้ว，ผ่าน"
-python3 -I skills/thai-lang-for-qwen/scripts/check_bleed.py th.md --allow 北京   # ตัวที่จงใจใช้
-```
-
 ## Repo layout
 
 ```
@@ -58,8 +50,6 @@ thai-lang-for-qwen-skill/
 └── skills/
     └── thai-lang-for-qwen/
         ├── SKILL.md                 ← ตัว skill (frontmatter + instructions)
-        └── scripts/
-            └── check_bleed.py       ← linter (stdlib only, exit 1 เมื่อพบ)
 ```
 
 ## Credits
